@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Open VS Code for frontend
-code /mnt/kaushal/Tech/Office/Arbyte/tangible/tangible-vite/frontend
+~/.local/bin/zed /mnt/kaushal/Tech/Office/Arbyte/tangible/tangible-vite/frontend
 
 # Start a new tmux session named 'dev'
 tmux new-session -d -s dev
