@@ -1,2 +1,22 @@
-https://terminaltrove.com/clipboard/
-https://terminaltrove.com/gping/
+1. ldmtool 
+2. tmux 
+3. zed
+4. slack
+6. cursor
+7.. vscode
+9. telegram
+10. xrandr
+11. neovim ~ lazyvim
+12. ollama ~ new model
+13. flameshot
+14. localSend
+15. yazi 
+16. kitty
+17. btop
+18. android studio
+19. brave
+20. zen browser
+21. obsidian
+22. postman
+23. docker
+24. kitty
