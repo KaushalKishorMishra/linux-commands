@@ -1,49 +1,60 @@
 #!/bin/bash
 
+# Check if notify-send is available
+if ! command -v notify-send &>/dev/null; then
+  exit 1
+fi
+
 # Scan for LDM disk groups
 DISKGROUP=$(sudo ldmtool scan | jq -r '.[0]')
 
-if [ -z "$DISKGROUP" ]; then
-  echo "Error: No LDM disk group found!"
+if [ -z "$DISKGROUP" ] || [ "$DISKGROUP" == "null" ]; then
+  notify-send --app-name="MountScript" -u critical "LDM Mount Error" "No LDM disk group found!"
   exit 1
 fi
 
-echo "LDM Disk Group: $DISKGROUP"
+# Volume labels and mount points
+VOL1_LABEL="Volume1"
+VOL2_LABEL="Volume2"
+MOUNT1="/mnt/kaushal/Tech"
+MOUNT2="/mnt/kaushal/Non_Tech"
 
-# Create the volume for Volume1 and Volume2
-VOL1_NAME=$(sudo ldmtool create volume "$DISKGROUP" Volume1 | jq -r '.[0]')
-VOL2_NAME=$(sudo ldmtool create volume "$DISKGROUP" Volume2 | jq -r '.[0]')
+# Function to create and/or mount a volume
+handle_volume() {
+  local LABEL=$1
+  local MOUNT_DIR=$2
 
-if [ -z "$VOL2_NAME" ] || [ "$VOL2_NAME" == "null" ]; then
-  echo "Error: Failed to create Volume2!"
-  exit 1
-fi
+  if mountpoint -q "$MOUNT_DIR"; then
+    return 0
+  fi
 
-echo "Created Volume: $VOL2_NAME"
+  local VOL_NAME
+  VOL_NAME=$(ls /dev/mapper | grep -i "$LABEL" | head -n 1)
 
-MOUNT_POINT="/mnt/kaushal/Tech"
+  if [ -z "$VOL_NAME" ]; then
+    VOL_NAME=$(sudo ldmtool create volume "$DISKGROUP" "$LABEL" | jq -r '.[0]')
+    if [ -z "$VOL_NAME" ] || [ "$VOL_NAME" == "null" ]; then
+      notify-send --app-name="MountScript" -u critical "Mount Error" "Failed to create $LABEL"
+      return 1
+    fi
+  fi
 
-# Unmount if already mounted
-if mountpoint -q "$MOUNT_POINT"; then
-  echo "Unmounting existing mount at $MOUNT_POINT..."
-  sudo umount "$MOUNT_POINT"
-fi
+  if [ ! -e "/dev/mapper/$VOL_NAME" ]; then
+    notify-send --app-name="MountScript" -u critical "Mount Error" "Device /dev/mapper/$VOL_NAME not found"
+    return 1
+  fi
 
-# Ensure the volume exists in /dev/mapper before mounting
-if [ ! -e "/dev/mapper/$VOL2_NAME" ]; then
-  echo "Error: Device mapper entry /dev/mapper/$VOL2_NAME does not exist!"
-  exit 1
-fi
+  sudo mkdir -p "$MOUNT_DIR"
+  sudo mount -t ntfs-3g "/dev/mapper/$VOL_NAME" "$MOUNT_DIR"
 
-# Create the mount directory if it doesn't exist
-sudo mkdir -p "$MOUNT_POINT"
+  if [ $? -eq 0 ]; then
+    notify-send --app-name="Mount Script" "Mount Success" "$LABEL mounted at $MOUNT_DIR"
+  else
+    notify-send --app-name="Mount Script" -u critical "Mount Error" "Failed to mount $LABEL"
+    return 1
+  fi
+}
 
-# Mount the volume
-echo "Mounting $VOL2_NAME to $MOUNT_POINT..."
-sudo mount -t ntfs-3g /dev/mapper/"$VOL2_NAME" "$MOUNT_POINT"
-
-if [ $? -eq 0 ]; then
-  echo "Mount successful!"
-else
-  echo "Error: Failed to mount $VOL2_NAME!"
-fi
+# Run for both volumes
+handle_volume "$VOL1_LABEL" "$MOUNT1"
+handle_volume "$VOL2_LABEL" "$MOUNT2"

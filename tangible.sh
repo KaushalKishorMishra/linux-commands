@@ -7,7 +7,7 @@ if tmux has-session -t dev 2>/dev/null; then
 fi
 
 # Open Zed editor for frontend
-~/.local/bin/zed /mnt/kaushal/Tech/Office/Arbyte/tangible/tangible-vite/frontend
+zed /mnt/kaushal/Tech/Office/Arbyte/tangible/tangible-vite/frontend
 
 # Start a new tmux session named 'dev' and detach
 tmux new-session -d -s dev

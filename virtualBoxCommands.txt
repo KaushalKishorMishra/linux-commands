@@ -1,0 +1,31 @@
+The commands you shared:
+
+```bash
+sudo rmmod kvm_intel
+sudo rmmod kvm
+```
+
+are used to **remove** (unload) the kernel modules `kvm_intel` and `kvm`.
+
+To reverse this — i.e., to **load** those kernel modules back — you use:
+
+```bash
+sudo modprobe kvm
+sudo modprobe kvm_intel
+```
+
+### Explanation:
+
+* `rmmod` removes a module.
+* `modprobe` inserts (loads) a module, resolving dependencies automatically.
+
+In your case, `kvm_intel` depends on `kvm`, so usually you load `kvm` first, then `kvm_intel`.
+
+If you want to check whether the modules are loaded or not, use:
+
+```bash
+lsmod | grep kvm
+```
+
+Would you like help with any related commands or to verify if the modules are active?
+
